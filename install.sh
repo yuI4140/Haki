@@ -1,1 +1,1 @@
-sudo cp ./target/release/haki /usr/bin/
+sudo cp ./target/release/Haki /usr/bin/
