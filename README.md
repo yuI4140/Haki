@@ -1,6 +1,5 @@
 # Haki
-A "Sceeenshot" Program  for Arch Linux.
-"" -> it use two programs to take the image.
+A "Sceeenshot" Program
 ## Cmd Args
 LongStyle| ShortStyle | Description |
 |--------|-----------|-------------|
