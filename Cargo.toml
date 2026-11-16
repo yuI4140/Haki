@@ -2,18 +2,20 @@
 name = "haki"
 version = "0.2.0"
 edition = "2024"
+build = "build.rs"
 
 [[bin]]
 name = "haki"
 path = "src/haki.rs"
+[build-dependencies]
+cc = "1.0"
+bindgen = "0.73.2"
+
 [dependencies]
-toml = "1.1.2"
-clap = { version = "4.0", features = ["derive"] }
-wayland-client = { git = "https://github.com/Smithay/wayland-rs.git", rev = "ad7d6a9b366441769990de04425ea2371e8a0e53" }
-wayland-protocols = { git = "https://github.com/Smithay/wayland-rs.git", rev = "ad7d6a9b366441769990de04425ea2371e8a0e53", features = [
-    "client",
-    "staging",
-    "unstable",
-] }
-serde = { version = "1.0.229", features = ["derive"] }
+clap = { 
+    version = "4.0",
+    features = ["derive"] 
+}
 display-info = "0.5.10"
+thiserror = "2.0.21"
+walkdir = "2.5.0"

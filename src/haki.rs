@@ -1,5 +1,6 @@
+#![allow(unused)]
+#![allow(dead_code)]
 use std::env;
-use std::os::unix::fs::OpenOptionsExt;
 use std::path::PathBuf;
 use std::str;
 use display_info::DisplayInfo;
