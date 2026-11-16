@@ -2,3 +2,4 @@
 !.gitignore
 !mod.rs
 !wayland-native.c
+!wayland-protocols 
