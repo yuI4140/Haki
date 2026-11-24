@@ -1,6 +1,4 @@
-*
-!wayland-protocols/
-!.gitignore
-!*.rs
-!*.c3
-!todo-protocols
+*.c
+*.o
+*.h
+*.a
