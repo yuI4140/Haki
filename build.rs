@@ -1,15 +1,13 @@
-use std::fs;
+use std::ffi::OsStr;
+use std::fs::{self, DirEntry, read_dir, remove_dir, remove_file};
 use std::io::{Read, Write};
 use std::os::unix::fs::MetadataExt;
 use std::os::unix::process::CommandExt;
-use std::process::{Command, exit}; use std::path::Path;
+use std::process::{Command, exit}; use std::path::{self, Path};
 fn check_program(program:&str) -> bool {
    Command::new("which")
        .arg(program)
-       .status().unwrap().success()
-}
-fn find_protocol(protocol: &str) -> String {
-    let output = Command::new("bash")
+       .status().unwrap().success() } fn find_protocol(protocol: &str) -> String { let output = Command::new("bash")
     .arg("-c")
     .arg(format!(r#"realpath $(find . -type f -name "{protocol}.xml")"#)) .output()
     .expect("failed to run");
@@ -80,6 +78,9 @@ fn execute(cmd:&str) -> bool {
 fn execute_bash(cmd:&str) -> bool {
     execute(&format!("bash -c \"{cmd}\""))
 }
+fn convert_osstr_to_str(s:&OsStr) -> &str {
+    s.to_str().unwrap()
+}
 fn build_static_lib(
     tmp_dir:&str,
     c_file: &str,
@@ -104,17 +105,15 @@ fn build_static_lib(
 }
 fn linker_options(out_dir: &str) {
     println!("cargo:rustc-link-search=native={out_dir}");
-
+   println!("cargo:rustc-link-arg=-lwayland_native");
     // Tell the linker not to discard libs based on order / as-needed.
     println!("cargo:rustc-link-arg=-Wl,--no-as-needed");
-
     // Group: let lld re-scan until all symbols resolve.
-    println!("cargo:rustc-link-arg=-Wl,--start-group");
-    println!("cargo:rustc-link-arg=-l:libwayland_native.a");
-    println!("cargo:rustc-link-arg=-l:libxdgshell_amalgamation.a");
-    println!("cargo:rustc-link-arg=-lwayland-client");
-    println!("cargo:rustc-link-arg=-lm");
-    println!("cargo:rustc-link-arg=-Wl,--end-group");
+   // println!("cargo:rustc-link-arg=-Wl,--start-group");
+   // println!("cargo:rustc-link-arg=-l:libxdgshell_amalgamation.a");
+   // println!("cargo:rustc-link-arg=-lwayland-client");
+   // println!("cargo:rustc-link-arg=-lm");
+   // println!("cargo:rustc-link-arg=-Wl,--end-group");
 }
 fn create_amalgamation(
     name:&str,
@@ -149,7 +148,7 @@ fn main() {
            exit(1); 
         }
         let c=format!("{out_dir}xdg_shell_amalgamation.c");
-        if !build_static_lib(out_dir,&c,"xdgshell_amalgamation") {
+        if !build_static_lib(out_dir,&c,"xdg_shell_amalgamation") {
             exit(1);
         }
         if !check_program("c3c") {
@@ -159,18 +158,40 @@ fn main() {
         let libfile = format!("{out_dir}wayland_native.c3");
         let outlib  = format!("{out_dir}libwayland_native");
         let c3_status = Command::new("c3c")
-            .arg("static-lib")
+            .arg("dynamic-lib")
             .arg(&libfile)
             .arg("-o")
             .arg(&outlib)
             .args(["-L",out_dir])
             .args(["-l","wayland-client"])
-            .args(["-l","xdgshell_amalgamation"])
+            .args(["-l","xdg_shell_amalgamation"])
             .status().expect("Error: cannot compile ");
         if !c3_status.success() {
             eprintln!("Error: cannot compile {outlib}");
             exit(1);
         }
+        if let Ok(entry) = read_dir(out_dir)  {
+            for e in entry {
+                if let Ok(e) = e {
+                    let epath   = e.path();
+                    let path_str= epath.clone().into_string().unwrap();
+                    let spath=path_str.split_once(".");
+                    if let Some(spath) = spath  {
+                        if epath.is_file() && spath.1!="c3" {
+                           _=remove_file(&epath);
+                           println!("removed {}",spath.0);
+                        }
+                        if path_str=="headers" {
+                           _=remove_dir(&epath);
+                           println!("removed {}",spath.0);
+                        }
+                    }
+                }else {
+                    continue;
+                }
+            }
+        } 
+        exit(1);
         linker_options(out_dir);
      }
 }
